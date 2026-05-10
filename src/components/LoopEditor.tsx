@@ -35,6 +35,7 @@ export function LoopEditor() {
   const setLoopEnd = usePlayerStore((s) => s.setLoopEnd)
   const setIsDraggingLoop = usePlayerStore((s) => s.setIsDraggingLoop)
   const isDragging = useRef(false)
+  const lastSeekRef = useRef(0)
 
   const timelineRef = useRef<HTMLDivElement>(null)
 
@@ -136,6 +137,9 @@ export function LoopEditor() {
 
       const onMouseMove = (e: MouseEvent) => {
         isDragging.current = true
+        const now = Date.now()
+        if (now - lastSeekRef.current < 80) return
+        lastSeekRef.current = now
         const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
         let ms = pct * duration
         if (isLooping && loopStart !== null && loopEnd !== null) {
