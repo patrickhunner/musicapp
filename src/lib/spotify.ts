@@ -139,7 +139,8 @@ export async function refreshAccessToken(): Promise<string | null> {
 }
 
 async function apiFetch<T>(endpoint: string, token: string): Promise<T> {
-  const response = await fetch(`${SPOTIFY_API_URL}${endpoint}`, {
+  const url = `${SPOTIFY_API_URL}${endpoint}`
+  const response = await fetch(url, {
     headers: { Authorization: `Bearer ${token}` },
   })
   if (!response.ok) {
@@ -149,7 +150,9 @@ async function apiFetch<T>(endpoint: string, token: string): Promise<T> {
         return apiFetch(endpoint, newToken)
       }
     }
-    throw new Error(`API error ${response.status}: ${await response.text()}`)
+    const body = await response.text()
+    console.error(`API ${response.status} for ${endpoint}:`, body)
+    throw new Error(`API error ${response.status}: ${body}`)
   }
   return response.json()
 }
