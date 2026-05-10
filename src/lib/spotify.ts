@@ -235,6 +235,12 @@ interface SpotifyTracksResponse {
   }[]
 }
 
+interface SpotifyPlaylistItemsResponse {
+  items: {
+    item: SpotifyTrackItem | null
+  }[]
+}
+
 export async function getUserPlaylists(token: string): Promise<SpotifyPlaylistItem[]> {
   const data = await apiFetch<SpotifyPlaylistsResponse>('/me/playlists?limit=50', token)
   return data.items
@@ -246,9 +252,9 @@ export async function getLikedSongs(token: string): Promise<SpotifyTrackItem[]> 
 }
 
 export async function getPlaylistTracks(playlistId: string, token: string): Promise<SpotifyTrackItem[]> {
-  const data = await apiFetch<SpotifyTracksResponse>(
-    `/playlists/${playlistId}/tracks?limit=50&market=from_token`,
+  const data = await apiFetch<SpotifyPlaylistItemsResponse>(
+    `/playlists/${playlistId}/items?limit=50&market=from_token`,
     token
   )
-  return data.items.map(i => i.track)
+  return data.items.map(i => i.item).filter((t): t is SpotifyTrackItem => t !== null)
 }
