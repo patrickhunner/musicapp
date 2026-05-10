@@ -15,6 +15,7 @@ interface PlaylistItem {
   imageUrl: string
   trackCount: number
   uri: string
+  ownerName: string
 }
 
 interface TrackItem {
@@ -53,6 +54,7 @@ export function LibraryView() {
             imageUrl: p.images?.[0]?.url ?? '',
             trackCount: p.tracks?.total ?? 0,
             uri: p.uri,
+            ownerName: p.owner?.display_name ?? 'Unknown',
           }))
         )
       )
@@ -194,6 +196,7 @@ export function LibraryView() {
                       />
                       <div className="text-white text-sm font-medium truncate">{playlist.name}</div>
                       <div className="text-gray-400 text-xs">{playlist.trackCount} tracks</div>
+                      <div className="text-gray-600 text-[10px] truncate">{playlist.ownerName}</div>
                     </button>
                   ))}
                 </div>

@@ -222,7 +222,7 @@ interface SpotifyPlaylistItem {
   images: { url: string }[]
   tracks: { total: number }
   uri: string
-  owner: { display_name: string }
+  owner: { display_name: string; id: string }
 }
 
 interface SpotifyPlaylistsResponse {
