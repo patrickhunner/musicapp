@@ -51,6 +51,8 @@ export async function redirectToAuth(): Promise<void> {
     throw new Error('VITE_SPOTIFY_CLIENT_ID not set in .env')
   }
 
+  console.log('Requesting scopes:', getScopes())
+
   const params = new URLSearchParams({
     client_id: clientId,
     response_type: 'code',
@@ -58,7 +60,6 @@ export async function redirectToAuth(): Promise<void> {
     code_challenge_method: 'S256',
     code_challenge: challenge,
     scope: getScopes(),
-    show_dialog: 'true',
   })
 
   window.location.href = `${SPOTIFY_AUTH_URL}?${params.toString()}`
