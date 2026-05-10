@@ -242,7 +242,7 @@ export async function getLikedSongs(token: string): Promise<SpotifyTrackItem[]> 
 
 export async function getPlaylistTracks(playlistId: string, token: string): Promise<SpotifyTrackItem[]> {
   const data = await apiFetch<SpotifyTracksResponse>(
-    `/playlists/${playlistId}/tracks?limit=50`,
+    `/playlists/${playlistId}/tracks?limit=50&market=from_token`,
     token
   )
   return data.items.map(i => i.track)
