@@ -62,7 +62,9 @@ export async function redirectToAuth(): Promise<void> {
     scope: getScopes(),
   })
 
-  window.location.href = `${SPOTIFY_AUTH_URL}?${params.toString()}`
+  const authUrl = `${SPOTIFY_AUTH_URL}?${params.toString()}`
+  console.log('Redirecting to:', authUrl)
+  window.location.href = authUrl
 }
 
 export async function exchangeCodeForToken(code: string): Promise<string> {
@@ -94,6 +96,7 @@ export async function exchangeCodeForToken(code: string): Promise<string> {
   if (data.refresh_token) {
     localStorage.setItem('spotify_refresh_token', data.refresh_token)
   }
+  console.log('Token scopes granted:', data.scope)
   return data.access_token
 }
 
