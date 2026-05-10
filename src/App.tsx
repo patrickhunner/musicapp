@@ -111,6 +111,11 @@ function App() {
           </>
         )}
       </div>
+      <div className="text-center pb-2">
+        <span className="text-[10px] text-gray-700 font-mono">
+          build {import.meta.env.VITE_GIT_HASH?.slice(0, 7) ?? 'dev'}
+        </span>
+      </div>
     </div>
   )
 }
