@@ -179,6 +179,18 @@ export function LoopEditor() {
     }
   }, [endInput, loopStart, loopEnd, setLoopEnd])
 
+  const adjustStart = useCallback((delta: number) => {
+    if (loopStart === null) return
+    const newVal = Math.max(0, Math.min(loopEnd ?? duration, loopStart + delta))
+    setLoopStart(snapToBeat(newVal))
+  }, [loopStart, loopEnd, duration, snapToBeat, setLoopStart])
+
+  const adjustEnd = useCallback((delta: number) => {
+    if (loopEnd === null) return
+    const newVal = Math.max(loopStart ?? 0, Math.min(duration, loopEnd + delta))
+    setLoopEnd(snapToBeat(newVal))
+  }, [loopEnd, loopStart, duration, snapToBeat, setLoopEnd])
+
   if (duration === 0) return null
 
   const startPct = loopStart !== null ? (loopStart / duration) * 100 : 0
@@ -231,17 +243,29 @@ export function LoopEditor() {
         </div>
       </div>
 
-      <div className="flex items-center gap-2 mt-2">
-        <div className="flex items-center gap-1.5 flex-1">
+        <div className="flex items-center gap-2 mt-2">
+        <div className="flex items-center gap-1 flex-1">
           <span className="text-xs text-gray-400">A:</span>
+          <button
+            onClick={() => adjustStart(-1000)}
+            className="px-1.5 py-1 text-xs text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 rounded transition-colors"
+          >
+            -1s
+          </button>
           <input
             type="text"
             value={startInput}
             onChange={(e) => setStartInput(e.target.value)}
             onBlur={handleStartInputBlur}
             onKeyDown={(e) => e.key === 'Enter' && handleStartInputBlur()}
-            className="flex-1 bg-gray-800 text-white text-xs px-2 py-1 rounded border border-gray-700 font-mono focus:outline-none focus:border-green-500"
+            className="w-24 bg-gray-800 text-white text-xs px-2 py-1 rounded border border-gray-700 font-mono focus:outline-none focus:border-green-500 text-center"
           />
+          <button
+            onClick={() => adjustStart(1000)}
+            className="px-1.5 py-1 text-xs text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 rounded transition-colors"
+          >
+            +1s
+          </button>
         </div>
         <div className="flex items-center gap-1 text-green-400 font-mono text-xs shrink-0">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
@@ -249,16 +273,28 @@ export function LoopEditor() {
           </svg>
           <span>{msToTimestamp(position)}</span>
         </div>
-        <div className="flex items-center gap-1.5 flex-1">
+        <div className="flex items-center gap-1 flex-1">
           <span className="text-xs text-gray-400">B:</span>
+          <button
+            onClick={() => adjustEnd(-1000)}
+            className="px-1.5 py-1 text-xs text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 rounded transition-colors"
+          >
+            -1s
+          </button>
           <input
             type="text"
             value={endInput}
             onChange={(e) => setEndInput(e.target.value)}
             onBlur={handleEndInputBlur}
             onKeyDown={(e) => e.key === 'Enter' && handleEndInputBlur()}
-            className="flex-1 bg-gray-800 text-white text-xs px-2 py-1 rounded border border-gray-700 font-mono focus:outline-none focus:border-green-500"
+            className="w-24 bg-gray-800 text-white text-xs px-2 py-1 rounded border border-gray-700 font-mono focus:outline-none focus:border-green-500 text-center"
           />
+          <button
+            onClick={() => adjustEnd(1000)}
+            className="px-1.5 py-1 text-xs text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 rounded transition-colors"
+          >
+            +1s
+          </button>
         </div>
       </div>
     </div>

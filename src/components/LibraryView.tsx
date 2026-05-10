@@ -131,6 +131,11 @@ export function LibraryView() {
       {error && (
         <div className="text-red-400 text-sm text-center py-3 bg-red-900/20 rounded-lg mb-4">
           {error}
+          {error.includes('403') && (
+            <p className="mt-1 text-gray-400">
+              Try logging out and back in to refresh your permissions.
+            </p>
+          )}
         </div>
       )}
 
