@@ -58,6 +58,7 @@ export async function redirectToAuth(): Promise<void> {
     code_challenge_method: 'S256',
     code_challenge: challenge,
     scope: getScopes(),
+    show_dialog: 'true',
   })
 
   window.location.href = `${SPOTIFY_AUTH_URL}?${params.toString()}`
