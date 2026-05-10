@@ -117,7 +117,29 @@ export function useSpotifyPlayer() {
                 }
                 setWaveform(waveform)
               })
-              .catch(console.error)
+              .catch(() => {
+                console.log('Audio analysis unavailable, using placeholder waveform')
+                const numBars = 300
+                const placeholder = new Array(numBars).fill(0).map((_, i) => {
+                  const phase = (i / numBars) * Math.PI * 6
+                  return 0.15 + Math.sin(phase) * 0.15 + Math.random() * 0.3
+                })
+                setWaveform(placeholder)
+
+                getAudioFeatures(track.id, token)
+                  .then((features) => {
+                    const bpm = features.tempo
+                    const beatInterval = 60000 / bpm
+                    const numBeats = Math.floor(track.duration_ms / beatInterval)
+                    const estimatedBeats = Array.from({ length: numBeats }, (_, i) => ({
+                      start: (i * beatInterval) / 1000,
+                      duration: beatInterval / 1000,
+                      confidence: 0.5,
+                    }))
+                    setBeats(estimatedBeats)
+                  })
+                  .catch(() => {})
+              })
           }
         }
       })
