@@ -170,6 +170,7 @@ interface SpotifyTrackItem {
   }
   duration_ms: number
   uri: string
+  preview_url: string | null
 }
 
 interface SpotifySearchResponse {
@@ -200,6 +201,10 @@ export async function searchTracks(query: string, token: string): Promise<Spotif
   const params = new URLSearchParams({ q: query, type: 'track' })
   const data = await apiFetch<SpotifySearchResponse>(`/search?${params}`, token)
   return data.tracks.items
+}
+
+export async function getTrack(id: string, token: string): Promise<SpotifyTrackItem> {
+  return apiFetch<SpotifyTrackItem>(`/tracks/${id}`, token)
 }
 
 export async function getAudioFeatures(id: string, token: string): Promise<SpotifyAudioFeaturesResponse> {

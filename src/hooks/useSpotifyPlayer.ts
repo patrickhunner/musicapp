@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { usePlayerStore } from '../stores/playerStore'
 import { refreshAccessToken } from '../lib/spotify'
-import { getAudioAnalysis, getAudioFeatures } from '../lib/spotify'
+import { getAudioAnalysis, getAudioFeatures, getTrack } from '../lib/spotify'
 
 export function useSpotifyPlayer() {
   const token = usePlayerStore((s) => s.token)
@@ -18,6 +18,36 @@ export function useSpotifyPlayer() {
   const setLoopEnd = usePlayerStore((s) => s.setLoopEnd)
 
   const lastUpdateRef = useRef({ position: 0, timestamp: 0, playing: false })
+
+  function fallbackWaveform(track: { id: string; duration_ms: number }, tok: string) {
+    const numBars = 300
+    const placeholder = new Array(numBars)
+    for (let i = 0; i < numBars; i++) {
+      const t = i / numBars
+      const intro = Math.min(1, t * 6)
+      const outro = 1 - Math.max(0, (t - 0.85) * 6)
+      const envelope = intro * outro
+      const sections = 0.4 + 0.6 * (0.5 + 0.5 * Math.sin(t * Math.PI * 5))
+      const beatRipple = 0.5 + 0.5 * Math.sin(t * Math.PI * 2 * track.duration_ms / 60000 * 8)
+      const noise = 1 - Math.random() * 0.3
+      placeholder[i] = Math.min(1, (envelope * sections * beatRipple * noise * 0.7 + 0.08))
+    }
+    setWaveform(placeholder)
+
+    getAudioFeatures(track.id, tok)
+      .then((features) => {
+        const bpm = features.tempo
+        const beatInterval = 60000 / bpm
+        const numBeats = Math.floor(track.duration_ms / beatInterval)
+        const estimatedBeats = Array.from({ length: numBeats }, (_, i) => ({
+          start: (i * beatInterval) / 1000,
+          duration: beatInterval / 1000,
+          confidence: 0.5,
+        }))
+        setBeats(estimatedBeats)
+      })
+      .catch(() => {})
+  }
 
   useEffect(() => {
     if (!token) return
@@ -118,34 +148,46 @@ export function useSpotifyPlayer() {
                 setWaveform(waveform)
               })
               .catch(() => {
-                console.log('Audio analysis unavailable, generating volume-based waveform')
-                const numBars = 300
-                const placeholder = new Array(numBars)
-                for (let i = 0; i < numBars; i++) {
-                  const t = i / numBars
-                  const intro = Math.min(1, t * 6)
-                  const outro = 1 - Math.max(0, (t - 0.85) * 6)
-                  const envelope = intro * outro
-                  const sections = 0.4 + 0.6 * (0.5 + 0.5 * Math.sin(t * Math.PI * 5))
-                  const beatRipple = 0.5 + 0.5 * Math.sin(t * Math.PI * 2 * track.duration_ms / 60000 * 8)
-                  const noise = 1 - Math.random() * 0.3
-                  placeholder[i] = Math.min(1, (envelope * sections * beatRipple * noise * 0.7 + 0.08))
-                }
-                setWaveform(placeholder)
+                console.log('Audio analysis unavailable, using preview URL for volume data')
+                getTrack(track.id, token)
+                  .then(async (trackData) => {
+                    const numBars = 300
+                    const barDuration = track.duration_ms / numBars
 
-                getAudioFeatures(track.id, token)
-                  .then((features) => {
-                    const bpm = features.tempo
-                    const beatInterval = 60000 / bpm
-                    const numBeats = Math.floor(track.duration_ms / beatInterval)
-                    const estimatedBeats = Array.from({ length: numBeats }, (_, i) => ({
-                      start: (i * beatInterval) / 1000,
-                      duration: beatInterval / 1000,
-                      confidence: 0.5,
-                    }))
-                    setBeats(estimatedBeats)
+                    if (trackData.preview_url) {
+                      try {
+                        const resp = await fetch(trackData.preview_url)
+                        const buf = await resp.arrayBuffer()
+                        const ctx = new AudioContext()
+                        const audio = await ctx.decodeAudioData(buf)
+                        const data = audio.getChannelData(0)
+                        const previewLen = (data.length / audio.sampleRate) * 1000
+
+                        const waveform = new Array(numBars).fill(0)
+                        for (let bar = 0; bar < numBars; bar++) {
+                          const barCenter = bar * barDuration + barDuration / 2
+                          const wrappedMs = barCenter % previewLen
+                          const sampleIdx = Math.floor((wrappedMs / 1000) * audio.sampleRate)
+                          const windowSamples = Math.max(1, Math.floor((barDuration / 1000) * audio.sampleRate))
+                          let peak = 0
+                          for (let s = 0; s < windowSamples; s++) {
+                            const idx = Math.min(sampleIdx + s, data.length - 1)
+                            const abs = Math.abs(data[idx])
+                            if (abs > peak) peak = abs
+                          }
+                          waveform[bar] = Math.min(1, peak * 4)
+                        }
+
+                        ctx.close()
+                        setWaveform(waveform)
+                      } catch {
+                        fallbackWaveform(track, token)
+                      }
+                    } else {
+                      fallbackWaveform(track, token)
+                    }
                   })
-                  .catch(() => {})
+                  .catch(() => fallbackWaveform(track, token))
               })
           }
         }
