@@ -1,7 +1,7 @@
 const SPOTIFY_AUTH_URL = 'https://accounts.spotify.com/authorize'
 const SPOTIFY_TOKEN_URL = 'https://accounts.spotify.com/api/token'
 const SPOTIFY_API_URL = 'https://api.spotify.com/v1'
-const REDIRECT_URI = window.location.origin + '/musicapp'
+const REDIRECT_URI = window.location.origin + '/musicapp/'
 
 function base64url(buffer: ArrayBuffer): string {
   const bytes = new Uint8Array(buffer)
