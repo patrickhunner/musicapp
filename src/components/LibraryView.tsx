@@ -88,6 +88,23 @@ export function LibraryView() {
     setSelectedPlaylist(playlist)
     setLoadingTracks(true)
     setError(null)
+
+    const testFetch = async (url: string) => {
+      try {
+        const res = await fetch(`https://api.spotify.com/v1${url}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        const body = await res.text()
+        console.log(`DIAG ${res.status} ${url} —`, body.slice(0, 200))
+      } catch (e) {
+        console.log(`DIAG ERROR ${url} —`, e)
+      }
+    }
+
+    await testFetch('/me')
+    await testFetch(`/playlists/${playlist.id}`)
+    await testFetch(`/playlists/${playlist.id}/tracks?limit=1`)
+
     getPlaylistTracks(playlist.id, token)
       .then((items) =>
         setPlaylistTracks(
