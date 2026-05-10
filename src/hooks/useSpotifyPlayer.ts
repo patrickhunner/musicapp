@@ -118,12 +118,19 @@ export function useSpotifyPlayer() {
                 setWaveform(waveform)
               })
               .catch(() => {
-                console.log('Audio analysis unavailable, using placeholder waveform')
+                console.log('Audio analysis unavailable, generating volume-based waveform')
                 const numBars = 300
-                const placeholder = new Array(numBars).fill(0).map((_, i) => {
-                  const phase = (i / numBars) * Math.PI * 6
-                  return 0.15 + Math.sin(phase) * 0.15 + Math.random() * 0.3
-                })
+                const placeholder = new Array(numBars)
+                for (let i = 0; i < numBars; i++) {
+                  const t = i / numBars
+                  const intro = Math.min(1, t * 6)
+                  const outro = 1 - Math.max(0, (t - 0.85) * 6)
+                  const envelope = intro * outro
+                  const sections = 0.4 + 0.6 * (0.5 + 0.5 * Math.sin(t * Math.PI * 5))
+                  const beatRipple = 0.5 + 0.5 * Math.sin(t * Math.PI * 2 * track.duration_ms / 60000 * 8)
+                  const noise = 1 - Math.random() * 0.3
+                  placeholder[i] = Math.min(1, (envelope * sections * beatRipple * noise * 0.7 + 0.08))
+                }
                 setWaveform(placeholder)
 
                 getAudioFeatures(track.id, token)
